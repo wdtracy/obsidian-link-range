@@ -1,6 +1,7 @@
 import { App, MarkdownRenderer, setIcon, TFile } from "obsidian";
 import { LinkRangeSettings } from "./settings";
 import { checkLink } from "./utils";
+import {removeFootnotes} from "src/removeFootnotes";
 
 export async function replaceEmbed(app: App, embed: Node, settings: LinkRangeSettings, isMarkdownPost = false) {
 	let embedHtml = embed as HTMLElement
@@ -46,7 +47,7 @@ export async function replaceEmbed(app: App, embed: Node, settings: LinkRangeSet
 
 			setIcon(linkDiv, 'link')
 
-			linkDiv.onClickEvent((ev: MouseEvent) => {
+			linkDiv.onClickEvent(() => {
 				const leaf = app.workspace.getMostRecentLeaf();
 				leaf?.openFile(foundNote, {
 					state: {
@@ -58,13 +59,13 @@ export async function replaceEmbed(app: App, embed: Node, settings: LinkRangeSet
 			const fileContent = await vault.cachedRead(foundNote);
 
 			let lines = fileContent.split("\n");
-			lines = lines.slice(res.h1Line, res.h2Line);
+			lines = lines.slice(res.h1Line, res.h2Line).map(l => removeFootnotes(l));
 
 			const contentDiv = embedHtml.createDiv({
 				cls: ["markdown-embed-content"]
 			})
 
-			MarkdownRenderer.renderMarkdown(lines.join("\n"), contentDiv, "", null!)
+			await MarkdownRenderer.renderMarkdown(lines.join("\n"), contentDiv, "", null)
 		}
 	}				
 }
